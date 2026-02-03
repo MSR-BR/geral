@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Venda: Gaita galega (Sib, Bubinga) + Trino Pro</title>
+  <meta name="description" content="Venda de gaita galega Afonso Castro em Sib (Bubinga) e Trino Pro. Contato: email e WhatsApp." />
+
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --card:#111827;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#60a5fa;
+      --accent2:#34d399;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --max: 1100px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:var(--max); margin:0 auto; padding:28px 18px 44px;}
+    h1,h2,h3{margin-top:0}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom:18px;
+    }
+    .pad{padding:18px;}
+    .carousel{background:#060913; border-radius:18px 18px 0 0;}
+    .slides{display:flex; overflow-x:auto; scroll-snap-type:x mandatory;}
+    .slide{min-width:100%; scroll-snap-align:start; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; color:#aaa;}
+    .price strong{font-size:1.4rem}
+    ul{margin-left:18px}
+  
+    /* Melhorias de tipografia e links */
+    .lead{color:var(--muted); max-width:72ch}
+    .muted{color:var(--muted)}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    /* Imagens */
+    .slide img{width:100%; height:100%; object-fit:cover; display:block;}
+
+    /* Galeria (gaita): fotos uma abaixo da outra */
+    .gallery{display:grid; gap:12px; margin-top:14px;}
+    .gallery figure{margin:0;}
+    .gallery img{width:100%; height:auto; display:block; border-radius:14px; border:1px solid var(--border);} 
+
+    /* Mobile */
+    @media (max-width: 640px){
+      .wrap{padding:16px 12px 32px;}
+      .pad{padding:14px;}
+      h1{font-size:1.35rem; line-height:1.15;}
+      h2{font-size:1.15rem;}
+      .price strong{font-size:1.25rem;}
+      .card{border-radius:16px;}
+      .carousel{border-radius:16px;}
+      .gallery img{border-radius:12px;}
+      .slide{aspect-ratio:4/3;}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .slides{scroll-behavior:auto;}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Venda: Gaita galega (Sib, Bubinga) + Trino Pro</h1>
+  <p class="lead">
+    Anúncios separados e opção de pacote. Links oficiais:
+    <a href="https://afonsocastro.com/" target="_blank" rel="noopener">Afonso Castro (luthier)</a>
+    •
+    <a href="https://trino.pt/" target="_blank" rel="noopener">TRINO (oficial)</a>.
+  </p>
+
+  <div class="card">
+    <div class="pad">
+      <h2>🎶 Gaita galega Afonso Castro</h2>
+      <p class="muted">Luthier: <a href="https://afonsocastro.com/" target="_blank" rel="noopener">https://afonsocastro.com/</a></p>
+      <div class="price"><strong>730 €</strong></div>
+      <ul>
+        <li>Afinação: <strong>Sib</strong></li>
+        <li>Madeira: <strong>Bubinga</strong></li>
+        <li>Válvula para controle de fluxo nos roncos</li>
+        <li>Palhetas de reserva incluídas</li>
+      </ul>
+
+      <!-- Fotos da gaita: uma abaixo da outra -->
+      <div class="gallery" aria-label="Fotos da gaita">
+        <figure><img src="images/gaita1.JPG" alt="Gaita galega Afonso Castro – acessórios" loading="lazy" /></figure>
+        <figure><img src="images/gaita2.JPG" alt="Gaita galega Afonso Castro – vista geral" loading="lazy" /></figure>
+        <figure><img src="images/gaita3.JPG" alt="Gaita galega Afonso Castro – conjunto completo" loading="lazy" /></figure>
+        <figure><img src="images/gaita4.JPG" alt="Gaita galega Afonso Castro – estojo" loading="lazy" /></figure>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pad">
+      <h2>🎹 Trino Pro</h2>
+      <p class="muted">Página oficial: <a href="https://trino.pt/" target="_blank" rel="noopener">https://trino.pt/</a></p>
+      <div class="price"><strong>350 €</strong></div>
+      <ul>
+        <li>Modelo Pro</li>
+        <li>Pode ser usado em conjunto com a gaita</li>
+      </ul>
+    </div>
+    <div class="carousel">
+      <div class="slides" aria-label="Foto do Trino">
+        <div class="slide"><img src="images/trino.JPG" alt="Trino Pro – conjunto com acessórios" loading="lazy" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pad">
+      <h2>🎁 Pacote completo</h2>
+      <div class="price"><strong>990 €</strong></div>
+      <p>Gaita galega Afonso Castro + Trino Pro.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pad">
+      <h2>Contacto</h2>
+      <p>Email: <a href="mailto:Mario.reis.junior@gmail.com">Mario.reis.junior@gmail.com</a></p>
+      <p>WhatsApp BR: +55 21 99969 5027</p>
+      <p>WhatsApp PT: +351 962 164 747</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pad">
+      <p><strong>Visitas à página:</strong> <span id="visitCounter">–</span></p>
+      <p class="muted" style="margin:0;">(contador local no navegador do visitante)</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const key = 'visitas-gaita-trino';
+  let count = localStorage.getItem(key);
+  count = count ? parseInt(count, 10) + 1 : 1;
+  localStorage.setItem(key, String(count));
+  const el = document.getElementById('visitCounter');
+  if (el) el.innerText = count;
+</script>
+</body>
+</html>

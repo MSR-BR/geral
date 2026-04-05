@@ -1,335 +1,131 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Controle de Carregamento</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; background: #f3f5f7; color: #1f2937; }
-    .page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; }
-    .card { background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 20px; }
-    h1 { margin: 0 0 18px; text-align: center; font-size: 28px; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .field.full { grid-column: 1 / -1; }
-    label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
-    input, textarea, button { width: 100%; border: 1px solid #d1d5db; border-radius: 10px; padding: 12px 14px; font-size: 15px; font-family: inherit; }
-    textarea { min-height: 92px; resize: vertical; }
-    .actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-    button { border: none; cursor: pointer; font-weight: 700; transition: transform 0.05s ease, opacity 0.2s ease; }
-    button:active { transform: scale(0.99); }
-    button:disabled { opacity: 0.7; cursor: not-allowed; }
-    .primary { background: #2563eb; color: white; }
-    .secondary { background: #6b7280; color: white; }
-    .warning { background: #d97706; color: white; display: none; width: auto; }
-    .warning.show { display: inline-block; }
-    .status { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 14px; display: none; }
-    .status.show { display: block; }
-    .status.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
-    .status.success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; }
-    .status.error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
-    h2 { margin: 0 0 14px; font-size: 20px; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 860px; }
-    th, td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: 14px; vertical-align: top; }
-    th { background: #f9fafb; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; color: #374151; }
-    tr:hover td { background: #fafafa; }
-    .tag { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 700; }
-    .muted { color: #6b7280; font-size: 13px; margin-top: 8px; }
-    .empty { text-align: center; color: #6b7280; padding: 24px; }
-    .row-actions { display: flex; gap: 8px; align-items: center; }
-    .icon-btn { width: 36px; height: 36px; padding: 0; border-radius: 10px; border: 1px solid #d1d5db; background: white; font-size: 18px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
-    .icon-btn.edit:hover { background: #eff6ff; }
-    .icon-btn.delete:hover { background: #fef2f2; }
-    @media (max-width: 700px) {
-      .page { padding: 16px 12px 28px; }
-      h1 { font-size: 24px; }
-      .form-grid { grid-template-columns: 1fr; }
-      .card { padding: 16px; }
-      .actions { flex-direction: column; }
-      .warning, .warning.show { width: 100%; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="card">
-      <h1>Controle de Carregamento</h1>
-      <form id="registroForm">
-        <input type="hidden" id="editRowIndex" value="" />
-        <div class="form-grid">
-          <div class="field">
-            <label for="nome">Nome</label>
-            <input type="text" id="nome" name="nome" placeholder="Digite o nome" required />
-          </div>
-          <div class="field">
-            <label for="caminhao">Caminhão</label>
-            <input type="text" id="caminhao" name="caminhao" placeholder="Ex.: Caminhão 12" required />
-          </div>
-          <div class="field">
-            <label for="bomba">Bomba</label>
-            <input type="text" id="bomba" name="bomba" placeholder="Ex.: Bomba 3" required />
-          </div>
-          <div class="field">
-            <label for="volume">Volume</label>
-            <input type="number" step="0.01" id="volume" name="volume" placeholder="Ex.: 250" required />
-          </div>
-          <div class="field">
-            <label for="data">Data</label>
-            <input type="date" id="data" name="data" required />
-          </div>
-          <div class="field full">
-            <label for="observacao">Observação</label>
-            <textarea id="observacao" name="observacao" placeholder="Escreva alguma observação..."></textarea>
-          </div>
-          <div class="actions">
-            <button type="submit" class="primary" id="btnSalvar">Salvar</button>
-            <button type="button" class="secondary" id="btnAtualizar">Atualizar tabela</button>
-            <button type="button" class="warning" id="btnCancelarEdicao">Cancelar edição</button>
-          </div>
-        </div>
-      </form>
-      <div id="status" class="status"></div>
-      <div class="muted">Os dados enviados ficam armazenados na planilha vinculada ao seu Google Apps Script.</div>
-    </div>
+function doGet() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dados");
+    const lastRow = sheet.getLastRow();
 
-    <div class="card">
-      <h2>Registros lançados</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Caminhão</th>
-              <th>Bomba</th>
-              <th>Volume</th>
-              <th>Data</th>
-              <th>Observação</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tabelaBody">
-            <tr><td colspan="7" class="empty">Carregando dados...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwowI46SGNVLj7GwIhpdkEwgH1WV4P5dqHE6hABm37-cQ4n3Og5kWVbU781zQLGDGGx/exec";
-
-    const form = document.getElementById("registroForm");
-    const statusEl = document.getElementById("status");
-    const tabelaBody = document.getElementById("tabelaBody");
-    const btnSalvar = document.getElementById("btnSalvar");
-    const btnAtualizar = document.getElementById("btnAtualizar");
-    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
-    const campoData = document.getElementById("data");
-    const campoEditRowIndex = document.getElementById("editRowIndex");
-    const tituloPagina = document.querySelector("h1");
-
-    campoData.value = new Date().toISOString().split("T")[0];
-
-    function mostrarStatus(mensagem, tipo) {
-      statusEl.textContent = mensagem;
-      statusEl.className = "status show " + (tipo || "info");
+    if (lastRow < 2) {
+      return ContentService
+        .createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
-    function escaparHtml(texto) {
-      return String(texto ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+    const values = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
 
-    function normalizarDataParaInput(valor) {
-      if (!valor) return "";
-      const texto = String(valor).trim();
-      if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto;
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
-        const p = texto.split("/");
-        return p[2] + "-" + p[1] + "-" + p[0];
-      }
-      const d = new Date(texto);
-      if (!Number.isNaN(d.getTime())) {
-        const a = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return a + "-" + m + "-" + day;
-      }
-      return "";
-    }
+    const data = values
+      .filter(row => row.some(cell => String(cell).trim() !== ""))
+      .map(row => ({
+        id: row[0] || "",
+        nome: row[1] || "",
+        caminhao: row[2] || "",
+        bomba: row[3] || "",
+        volume: row[4] || "",
+        data: row[5] || "",
+        observacao: row[6] || "",
+        timestamp: row[7] || ""
+      }));
 
-    function formatarData(valor) {
-      const n = normalizarDataParaInput(valor);
-      if (!n) return valor || "";
-      const p = n.split("-");
-      return p[2] + "/" + p[1] + "/" + p[0];
-    }
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
 
-    function resetarFormulario() {
-      form.reset();
-      campoData.value = new Date().toISOString().split("T")[0];
-      campoEditRowIndex.value = "";
-      btnSalvar.textContent = "Salvar";
-      btnCancelarEdicao.classList.remove("show");
-      tituloPagina.textContent = "Controle de Carregamento";
-    }
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        error: error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
 
-    function preencherFormularioParaEdicao(rowIndex, item) {
-      document.getElementById("nome").value = item.nome || "";
-      document.getElementById("caminhao").value = item.caminhao || "";
-      document.getElementById("bomba").value = item.bomba || "";
-      document.getElementById("volume").value = item.volume || "";
-      document.getElementById("data").value = normalizarDataParaInput(item.data);
-      document.getElementById("observacao").value = item.observacao || "";
-      campoEditRowIndex.value = String(rowIndex);
-      btnSalvar.textContent = "Atualizar";
-      btnCancelarEdicao.classList.add("show");
-      tituloPagina.textContent = "Controle de Carregamento - Editando registro";
-      mostrarStatus("Modo de edição ativado. Faça as alterações e clique em Atualizar.", "info");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+function doPost(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dados");
+    const data = JSON.parse(e.postData.contents || "{}");
+    const action = String(data.action || "create").trim();
+    const id = String(data.id || "").trim();
 
-    async function carregarDados() {
-      mostrarStatus("Carregando dados...", "info");
-      btnAtualizar.disabled = true;
-
-      try {
-        const resposta = await fetch(SCRIPT_URL + "?ts=" + Date.now(), { method: "GET", cache: "no-store" });
-        if (!resposta.ok) throw new Error("Falha ao consultar os dados.");
-
-        const dados = await resposta.json();
-        tabelaBody.innerHTML = "";
-
-        if (!Array.isArray(dados) || dados.length === 0) {
-          tabelaBody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum registro encontrado.</td></tr>';
-          mostrarStatus("Nenhum registro encontrado.", "info");
-          return;
-        }
-
-        dados.slice().reverse().forEach(function(item) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = '<td>' + escaparHtml(item.nome) + '</td>' +
-            '<td><span class="tag">' + escaparHtml(item.caminhao) + '</span></td>' +
-            '<td>' + escaparHtml(item.bomba) + '</td>' +
-            '<td>' + escaparHtml(item.volume) + '</td>' +
-            '<td>' + escaparHtml(formatarData(item.data)) + '</td>' +
-            '<td>' + escaparHtml(item.observacao) + '</td>' +
-            '<td><div class="row-actions">' +
-            '<button type="button" class="icon-btn edit" title="Editar">✏️</button>' +
-            '<button type="button" class="icon-btn delete" title="Apagar">🗑️</button>' +
-            '</div></td>';
-
-          const btnEdit = tr.querySelector('.edit');
-          const btnDelete = tr.querySelector('.delete');
-
-          btnEdit.addEventListener('click', function () {
-            preencherFormularioParaEdicao(item.rowIndex, item);
-          });
-
-          btnDelete.addEventListener('click', async function () {
-            const confirmar = window.confirm('Deseja realmente apagar este registro?');
-            if (!confirmar) return;
-
-            try {
-              mostrarStatus('Apagando registro...', 'info');
-              const respostaDelete = await fetch(SCRIPT_URL + '?ts=' + Date.now(), {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'delete', rowIndex: item.rowIndex }),
-                cache: 'no-store'
-              });
-
-              if (!respostaDelete.ok) throw new Error('Falha ao apagar o registro.');
-              const resultadoDelete = await respostaDelete.json();
-              if (!resultadoDelete.success) throw new Error(resultadoDelete.error || 'Falha ao apagar o registro.');
-
-              if (campoEditRowIndex.value && Number(campoEditRowIndex.value) === Number(item.rowIndex)) {
-                resetarFormulario();
-              }
-
-              mostrarStatus('Registro apagado com sucesso.', 'success');
-              await carregarDados();
-            } catch (erro) {
-              console.error(erro);
-              mostrarStatus('Erro ao apagar o registro. ' + erro.message, 'error');
-            }
-          });
-
-          tabelaBody.appendChild(tr);
-        });
-
-        mostrarStatus('Dados carregados com sucesso.', 'success');
-      } catch (erro) {
-        console.error(erro);
-        tabelaBody.innerHTML = '<tr><td colspan="7" class="empty">Erro ao carregar os dados.</td></tr>';
-        mostrarStatus('Erro ao carregar os dados. Verifique o Apps Script publicado.', 'error');
-      } finally {
-        btnAtualizar.disabled = false;
-      }
-    }
-
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const dados = {
-        nome: document.getElementById('nome').value.trim(),
-        caminhao: document.getElementById('caminhao').value.trim(),
-        bomba: document.getElementById('bomba').value.trim(),
-        volume: document.getElementById('volume').value.trim(),
-        data: document.getElementById('data').value,
-        observacao: document.getElementById('observacao').value.trim()
-      };
-
-      if (!dados.nome || !dados.caminhao || !dados.bomba || !dados.volume || !dados.data) {
-        mostrarStatus('Preencha todos os campos obrigatórios.', 'error');
-        return;
+    if (action === "update") {
+      if (!id) {
+        throw new Error("ID inválido para atualização.");
       }
 
-      btnSalvar.disabled = true;
-
-      try {
-        const rowIndex = campoEditRowIndex.value.trim();
-        const payload = rowIndex
-          ? { action: 'update', rowIndex: Number(rowIndex), nome: dados.nome, caminhao: dados.caminhao, bomba: dados.bomba, volume: dados.volume, data: dados.data, observacao: dados.observacao }
-          : { nome: dados.nome, caminhao: dados.caminhao, bomba: dados.bomba, volume: dados.volume, data: dados.data, observacao: dados.observacao };
-
-        mostrarStatus(rowIndex ? 'Atualizando registro...' : 'Salvando registro...', 'info');
-
-        const resposta = await fetch(SCRIPT_URL + '?ts=' + Date.now(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload),
-          cache: 'no-store'
-        });
-
-        if (!resposta.ok) throw new Error('Falha ao salvar os dados.');
-        const resultado = await resposta.json();
-        if (!resultado.success) throw new Error(resultado.error || 'Falha ao salvar os dados.');
-
-        mostrarStatus(rowIndex ? 'Registro atualizado com sucesso.' : 'Registro salvo com sucesso.', 'success');
-        resetarFormulario();
-        await carregarDados();
-      } catch (erro) {
-        console.error(erro);
-        mostrarStatus('Erro ao processar os dados. ' + erro.message, 'error');
-      } finally {
-        btnSalvar.disabled = false;
+      const row = localizarLinhaPorId(sheet, id);
+      if (!row) {
+        throw new Error("Registro não encontrado para atualização.");
       }
-    });
 
-    btnCancelarEdicao.addEventListener('click', function () {
-      resetarFormulario();
-      mostrarStatus('Edição cancelada.', 'info');
-    });
+      sheet.getRange(row, 1, 1, 8).setValues([[
+        id,
+        data.nome || "",
+        data.caminhao || "",
+        data.bomba || "",
+        data.volume || "",
+        data.data || "",
+        data.observacao || "",
+        new Date()
+      ]]);
 
-    btnAtualizar.addEventListener('click', carregarDados);
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-    carregarDados();
-  </script>
-</body>
-</html>
+    if (action === "delete") {
+      if (!id) {
+        throw new Error("ID inválido para exclusão.");
+      }
+
+      const row = localizarLinhaPorId(sheet, id);
+      if (!row) {
+        throw new Error("Registro não encontrado para exclusão.");
+      }
+
+      sheet.deleteRow(row);
+
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const newId = Utilities.getUuid();
+
+    sheet.appendRow([
+      newId,
+      data.nome || "",
+      data.caminhao || "",
+      data.bomba || "",
+      data.volume || "",
+      data.data || "",
+      data.observacao || "",
+      new Date()
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        error: error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function localizarLinhaPorId(sheet, id) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null;
+
+  const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]).trim() === id) {
+      return i + 2;
+    }
+  }
+
+  return null;
+}

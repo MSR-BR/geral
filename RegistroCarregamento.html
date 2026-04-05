@@ -56,7 +56,7 @@
     <div class="card">
       <h1>Controle de Carregamento</h1>
       <form id="registroForm">
-        <input type="hidden" id="editId" value="" />
+        <input type="hidden" id="editRowIndex" value="" />
         <div class="form-grid">
           <div class="field">
             <label for="nome">Nome</label>
@@ -92,6 +92,7 @@
       <div id="status" class="status"></div>
       <div class="muted">Os dados enviados ficam armazenados na planilha vinculada ao seu Google Apps Script.</div>
     </div>
+
     <div class="card">
       <h2>Registros lançados</h2>
       <div class="table-wrap">
@@ -114,8 +115,10 @@
       </div>
     </div>
   </div>
+
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwowI46SGNVLj7GwIhpdkEwgH1WV4P5dqHE6hABm37-cQ4n3Og5kWVbU781zQLGDGGx/exec";
+
     const form = document.getElementById("registroForm");
     const statusEl = document.getElementById("status");
     const tabelaBody = document.getElementById("tabelaBody");
@@ -123,18 +126,25 @@
     const btnAtualizar = document.getElementById("btnAtualizar");
     const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
     const campoData = document.getElementById("data");
-    const campoEditId = document.getElementById("editId");
+    const campoEditRowIndex = document.getElementById("editRowIndex");
     const tituloPagina = document.querySelector("h1");
-    let registrosCache = [];
+
     campoData.value = new Date().toISOString().split("T")[0];
 
     function mostrarStatus(mensagem, tipo) {
       statusEl.textContent = mensagem;
       statusEl.className = "status show " + (tipo || "info");
     }
+
     function escaparHtml(texto) {
-      return String(texto ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+      return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
+
     function normalizarDataParaInput(valor) {
       if (!valor) return "";
       const texto = String(valor).trim();
@@ -152,54 +162,56 @@
       }
       return "";
     }
+
     function formatarData(valor) {
       const n = normalizarDataParaInput(valor);
       if (!n) return valor || "";
       const p = n.split("-");
       return p[2] + "/" + p[1] + "/" + p[0];
     }
+
     function resetarFormulario() {
       form.reset();
       campoData.value = new Date().toISOString().split("T")[0];
-      campoEditId.value = "";
+      campoEditRowIndex.value = "";
       btnSalvar.textContent = "Salvar";
       btnCancelarEdicao.classList.remove("show");
       tituloPagina.textContent = "Controle de Carregamento";
     }
-    function preencherFormularioParaEdicao(id) {
-      const item = registrosCache.find(function(reg) { return String(reg.id) === String(id); });
-      if (!item) {
-        mostrarStatus("Não foi possível localizar o registro para edição.", "error");
-        return;
-      }
+
+    function preencherFormularioParaEdicao(rowIndex, item) {
       document.getElementById("nome").value = item.nome || "";
       document.getElementById("caminhao").value = item.caminhao || "";
       document.getElementById("bomba").value = item.bomba || "";
       document.getElementById("volume").value = item.volume || "";
       document.getElementById("data").value = normalizarDataParaInput(item.data);
       document.getElementById("observacao").value = item.observacao || "";
-      campoEditId.value = String(id);
+      campoEditRowIndex.value = String(rowIndex);
       btnSalvar.textContent = "Atualizar";
       btnCancelarEdicao.classList.add("show");
       tituloPagina.textContent = "Controle de Carregamento - Editando registro";
       mostrarStatus("Modo de edição ativado. Faça as alterações e clique em Atualizar.", "info");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+
     async function carregarDados() {
       mostrarStatus("Carregando dados...", "info");
       btnAtualizar.disabled = true;
+
       try {
         const resposta = await fetch(SCRIPT_URL + "?ts=" + Date.now(), { method: "GET", cache: "no-store" });
         if (!resposta.ok) throw new Error("Falha ao consultar os dados.");
+
         const dados = await resposta.json();
-        registrosCache = Array.isArray(dados) ? dados : [];
         tabelaBody.innerHTML = "";
-        if (registrosCache.length === 0) {
+
+        if (!Array.isArray(dados) || dados.length === 0) {
           tabelaBody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum registro encontrado.</td></tr>';
           mostrarStatus("Nenhum registro encontrado.", "info");
           return;
         }
-        registrosCache.slice().reverse().forEach(function(item) {
+
+        dados.slice().reverse().forEach(function(item) {
           const tr = document.createElement("tr");
           tr.innerHTML = '<td>' + escaparHtml(item.nome) + '</td>' +
             '<td><span class="tag">' + escaparHtml(item.caminhao) + '</span></td>' +
@@ -208,96 +220,115 @@
             '<td>' + escaparHtml(formatarData(item.data)) + '</td>' +
             '<td>' + escaparHtml(item.observacao) + '</td>' +
             '<td><div class="row-actions">' +
-            '<button type="button" class="icon-btn edit" data-action="edit" data-id="' + escaparHtml(item.id) + '" title="Editar">✏️</button>' +
-            '<button type="button" class="icon-btn delete" data-action="delete" data-id="' + escaparHtml(item.id) + '" title="Apagar">🗑️</button>' +
+            '<button type="button" class="icon-btn edit" title="Editar">✏️</button>' +
+            '<button type="button" class="icon-btn delete" title="Apagar">🗑️</button>' +
             '</div></td>';
+
+          const btnEdit = tr.querySelector('.edit');
+          const btnDelete = tr.querySelector('.delete');
+
+          btnEdit.addEventListener('click', function () {
+            preencherFormularioParaEdicao(item.rowIndex, item);
+          });
+
+          btnDelete.addEventListener('click', async function () {
+            const confirmar = window.confirm('Deseja realmente apagar este registro?');
+            if (!confirmar) return;
+
+            try {
+              mostrarStatus('Apagando registro...', 'info');
+              const respostaDelete = await fetch(SCRIPT_URL + '?ts=' + Date.now(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'delete', rowIndex: item.rowIndex }),
+                cache: 'no-store'
+              });
+
+              if (!respostaDelete.ok) throw new Error('Falha ao apagar o registro.');
+              const resultadoDelete = await respostaDelete.json();
+              if (!resultadoDelete.success) throw new Error(resultadoDelete.error || 'Falha ao apagar o registro.');
+
+              if (campoEditRowIndex.value && Number(campoEditRowIndex.value) === Number(item.rowIndex)) {
+                resetarFormulario();
+              }
+
+              mostrarStatus('Registro apagado com sucesso.', 'success');
+              await carregarDados();
+            } catch (erro) {
+              console.error(erro);
+              mostrarStatus('Erro ao apagar o registro. ' + erro.message, 'error');
+            }
+          });
+
           tabelaBody.appendChild(tr);
         });
-        mostrarStatus("Dados carregados com sucesso.", "success");
+
+        mostrarStatus('Dados carregados com sucesso.', 'success');
       } catch (erro) {
         console.error(erro);
         tabelaBody.innerHTML = '<tr><td colspan="7" class="empty">Erro ao carregar os dados.</td></tr>';
-        mostrarStatus("Erro ao carregar os dados. Verifique a publicação do Apps Script e as permissões.", "error");
+        mostrarStatus('Erro ao carregar os dados. Verifique o Apps Script publicado.', 'error');
       } finally {
         btnAtualizar.disabled = false;
       }
     }
-    async function enviarJson(payload, mensagemErroPadrao) {
-      const resposta = await fetch(SCRIPT_URL + "?ts=" + Date.now(), {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload),
-        cache: "no-store"
-      });
-      if (!resposta.ok) throw new Error(mensagemErroPadrao);
-      const resultado = await resposta.json();
-      if (!resultado.success) throw new Error(resultado.error || mensagemErroPadrao);
-      return resultado;
-    }
-    form.addEventListener("submit", async function (e) {
+
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
+
       const dados = {
-        nome: document.getElementById("nome").value.trim(),
-        caminhao: document.getElementById("caminhao").value.trim(),
-        bomba: document.getElementById("bomba").value.trim(),
-        volume: document.getElementById("volume").value.trim(),
-        data: document.getElementById("data").value,
-        observacao: document.getElementById("observacao").value.trim()
+        nome: document.getElementById('nome').value.trim(),
+        caminhao: document.getElementById('caminhao').value.trim(),
+        bomba: document.getElementById('bomba').value.trim(),
+        volume: document.getElementById('volume').value.trim(),
+        data: document.getElementById('data').value,
+        observacao: document.getElementById('observacao').value.trim()
       };
+
       if (!dados.nome || !dados.caminhao || !dados.bomba || !dados.volume || !dados.data) {
-        mostrarStatus("Preencha todos os campos obrigatórios.", "error");
+        mostrarStatus('Preencha todos os campos obrigatórios.', 'error');
         return;
       }
+
       btnSalvar.disabled = true;
+
       try {
-        const id = campoEditId.value.trim();
-        if (!id) {
-          mostrarStatus("Salvando registro...", "info");
-          await enviarJson({ action: "create", ...dados }, "Falha ao salvar o registro.");
-          mostrarStatus("Registro salvo com sucesso.", "success");
-        } else {
-          mostrarStatus("Atualizando registro...", "info");
-          await enviarJson({ action: "update", id: id, ...dados }, "Falha ao atualizar o registro.");
-          mostrarStatus("Registro atualizado com sucesso.", "success");
-        }
+        const rowIndex = campoEditRowIndex.value.trim();
+        const payload = rowIndex
+          ? { action: 'update', rowIndex: Number(rowIndex), nome: dados.nome, caminhao: dados.caminhao, bomba: dados.bomba, volume: dados.volume, data: dados.data, observacao: dados.observacao }
+          : { nome: dados.nome, caminhao: dados.caminhao, bomba: dados.bomba, volume: dados.volume, data: dados.data, observacao: dados.observacao };
+
+        mostrarStatus(rowIndex ? 'Atualizando registro...' : 'Salvando registro...', 'info');
+
+        const resposta = await fetch(SCRIPT_URL + '?ts=' + Date.now(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+          cache: 'no-store'
+        });
+
+        if (!resposta.ok) throw new Error('Falha ao salvar os dados.');
+        const resultado = await resposta.json();
+        if (!resultado.success) throw new Error(resultado.error || 'Falha ao salvar os dados.');
+
+        mostrarStatus(rowIndex ? 'Registro atualizado com sucesso.' : 'Registro salvo com sucesso.', 'success');
         resetarFormulario();
         await carregarDados();
       } catch (erro) {
         console.error(erro);
-        mostrarStatus("Erro ao processar os dados. " + erro.message, "error");
+        mostrarStatus('Erro ao processar os dados. ' + erro.message, 'error');
       } finally {
         btnSalvar.disabled = false;
       }
     });
-    tabelaBody.addEventListener("click", async function (e) {
-      const botao = e.target.closest("button[data-action]");
-      if (!botao) return;
-      const action = botao.dataset.action;
-      const id = botao.dataset.id;
-      if (action === "edit") {
-        preencherFormularioParaEdicao(id);
-        return;
-      }
-      if (action === "delete") {
-        const confirmar = window.confirm("Deseja realmente apagar este registro?");
-        if (!confirmar) return;
-        try {
-          mostrarStatus("Apagando registro...", "info");
-          await enviarJson({ action: "delete", id: id }, "Falha ao apagar o registro.");
-          if (campoEditId.value && String(campoEditId.value) === String(id)) resetarFormulario();
-          mostrarStatus("Registro apagado com sucesso.", "success");
-          await carregarDados();
-        } catch (erro) {
-          console.error(erro);
-          mostrarStatus("Erro ao apagar o registro. " + erro.message, "error");
-        }
-      }
-    });
-    btnCancelarEdicao.addEventListener("click", function () {
+
+    btnCancelarEdicao.addEventListener('click', function () {
       resetarFormulario();
-      mostrarStatus("Edição cancelada.", "info");
+      mostrarStatus('Edição cancelada.', 'info');
     });
-    btnAtualizar.addEventListener("click", carregarDados);
+
+    btnAtualizar.addEventListener('click', carregarDados);
+
     carregarDados();
   </script>
 </body>

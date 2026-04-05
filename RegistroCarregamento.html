@@ -6,177 +6,39 @@
   <title>Controle de Carregamento</title>
   <style>
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f3f5f7;
-      color: #1f2937;
-    }
-    .page {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 24px 16px 40px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    h1 {
-      margin: 0 0 18px;
-      text-align: center;
-      font-size: 28px;
-    }
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f3f5f7; color: #1f2937; }
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; }
+    .card { background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 20px; }
+    h1 { margin: 0 0 18px; text-align: center; font-size: 28px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .field.full { grid-column: 1 / -1; }
-    label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-    input, textarea, button {
-      width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 15px;
-      font-family: inherit;
-    }
-    textarea {
-      min-height: 92px;
-      resize: vertical;
-    }
-    .actions {
-      grid-column: 1 / -1;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 4px;
-    }
-    button {
-      border: none;
-      cursor: pointer;
-      font-weight: 700;
-      transition: transform 0.05s ease, opacity 0.2s ease;
-    }
+    label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+    input, textarea, button { width: 100%; border: 1px solid #d1d5db; border-radius: 10px; padding: 12px 14px; font-size: 15px; font-family: inherit; }
+    textarea { min-height: 92px; resize: vertical; }
+    .actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    button { border: none; cursor: pointer; font-weight: 700; transition: transform 0.05s ease, opacity 0.2s ease; }
     button:active { transform: scale(0.99); }
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-    .primary {
-      background: #2563eb;
-      color: white;
-    }
-    .secondary {
-      background: #6b7280;
-      color: white;
-    }
-    .warning {
-      background: #d97706;
-      color: white;
-      display: none;
-      width: auto;
-    }
-    .warning.show {
-      display: inline-block;
-    }
-    .status {
-      margin-top: 14px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 14px;
-      display: none;
-    }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
+    .primary { background: #2563eb; color: white; }
+    .secondary { background: #6b7280; color: white; }
+    .warning { background: #d97706; color: white; display: none; width: auto; }
+    .warning.show { display: inline-block; }
+    .status { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 14px; display: none; }
     .status.show { display: block; }
-    .status.info {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1d4ed8;
-    }
-    .status.success {
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      color: #047857;
-    }
-    .status.error {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
-    }
-    h2 {
-      margin: 0 0 14px;
-      font-size: 20px;
-    }
-    .table-wrap {
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 860px;
-    }
-    th, td {
-      padding: 12px 10px;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-      font-size: 14px;
-      vertical-align: top;
-    }
-    th {
-      background: #f9fafb;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      color: #374151;
-    }
-    tr:hover td {
-      background: #fafafa;
-    }
-    .tag {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #eef2ff;
-      color: #3730a3;
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .muted {
-      color: #6b7280;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-    .empty {
-      text-align: center;
-      color: #6b7280;
-      padding: 24px;
-    }
-    .row-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .icon-btn {
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      background: white;
-      font-size: 18px;
-      line-height: 1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .status.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+    .status.success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; }
+    .status.error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: 14px; vertical-align: top; }
+    th { background: #f9fafb; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; color: #374151; }
+    tr:hover td { background: #fafafa; }
+    .tag { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 700; }
+    .muted { color: #6b7280; font-size: 13px; margin-top: 8px; }
+    .empty { text-align: center; color: #6b7280; padding: 24px; }
+    .row-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn { width: 36px; height: 36px; padding: 0; border-radius: 10px; border: 1px solid #d1d5db; background: white; font-size: 18px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
     .icon-btn.edit:hover { background: #eff6ff; }
     .icon-btn.delete:hover { background: #fef2f2; }
     @media (max-width: 700px) {
@@ -276,7 +138,7 @@
     const tituloPagina = document.querySelector("h1");
 
     let registrosCache = [];
-    let editandoIndex = null;
+    let editandoRowIndex = null;
 
     campoData.value = new Date().toISOString().split("T")[0];
 
@@ -295,43 +157,60 @@
     }
 
     function formatarData(valor) {
+      const normalizada = normalizarDataParaInput(valor);
+      if (!normalizada) return valor || "";
+      const partes = normalizada.split("-");
+      return partes[2] + "/" + partes[1] + "/" + partes[0];
+    }
+
+    function normalizarDataParaInput(valor) {
       if (!valor) return "";
-      const texto = String(valor);
+      const texto = String(valor).trim();
 
       if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-        const partes = texto.split("-");
-        return partes[2] + "/" + partes[1] + "/" + partes[0];
+        return texto;
+      }
+
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+        const partes = texto.split("/");
+        return partes[2] + "-" + partes[1] + "-" + partes[0];
       }
 
       const data = new Date(texto);
       if (!Number.isNaN(data.getTime())) {
-        return data.toLocaleDateString("pt-BR");
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, "0");
+        const dia = String(data.getDate()).padStart(2, "0");
+        return ano + "-" + mes + "-" + dia;
       }
 
-      return texto;
+      return "";
     }
 
     function resetarFormulario() {
       form.reset();
       campoData.value = new Date().toISOString().split("T")[0];
-      editandoIndex = null;
+      editandoRowIndex = null;
       btnSalvar.textContent = "Salvar";
       btnCancelarEdicao.classList.remove("show");
       tituloPagina.textContent = "Controle de Carregamento";
     }
 
-    function preencherFormularioParaEdicao(indexOriginal) {
-      const item = registrosCache[indexOriginal];
-      if (!item) return;
+    function preencherFormularioParaEdicao(rowIndex) {
+      const item = registrosCache.find(function(reg) { return Number(reg.rowIndex) === Number(rowIndex); });
+      if (!item) {
+        mostrarStatus("Não foi possível localizar o registro para edição.", "error");
+        return;
+      }
 
       document.getElementById("nome").value = item.nome || "";
       document.getElementById("caminhao").value = item.caminhao || "";
       document.getElementById("bomba").value = item.bomba || "";
       document.getElementById("volume").value = item.volume || "";
-      document.getElementById("data").value = /^\d{4}-\d{2}-\d{2}$/.test(String(item.data || "")) ? item.data : campoData.value;
+      document.getElementById("data").value = normalizarDataParaInput(item.data);
       document.getElementById("observacao").value = item.observacao || "";
 
-      editandoIndex = indexOriginal;
+      editandoRowIndex = Number(rowIndex);
       btnSalvar.textContent = "Atualizar";
       btnCancelarEdicao.classList.add("show");
       tituloPagina.textContent = "Controle de Carregamento - Editando registro";
@@ -357,25 +236,20 @@
           return;
         }
 
-        registrosCache
-          .map(function(item, indexOriginal) { return { item: item, indexOriginal: indexOriginal }; })
-          .reverse()
-          .forEach(function(obj) {
-            const item = obj.item;
-            const indexOriginal = obj.indexOriginal;
-            const tr = document.createElement("tr");
-            tr.innerHTML = '<td>' + escaparHtml(item.nome) + '</td>' +
-              '<td><span class="tag">' + escaparHtml(item.caminhao) + '</span></td>' +
-              '<td>' + escaparHtml(item.bomba) + '</td>' +
-              '<td>' + escaparHtml(item.volume) + '</td>' +
-              '<td>' + escaparHtml(formatarData(item.data)) + '</td>' +
-              '<td>' + escaparHtml(item.observacao) + '</td>' +
-              '<td><div class="row-actions">' +
-              '<button type="button" class="icon-btn edit" data-action="edit" data-index="' + indexOriginal + '" title="Editar">✏️</button>' +
-              '<button type="button" class="icon-btn delete" data-action="delete" data-index="' + indexOriginal + '" title="Apagar">🗑️</button>' +
-              '</div></td>';
-            tabelaBody.appendChild(tr);
-          });
+        registrosCache.slice().reverse().forEach(function(item) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = '<td>' + escaparHtml(item.nome) + '</td>' +
+            '<td><span class="tag">' + escaparHtml(item.caminhao) + '</span></td>' +
+            '<td>' + escaparHtml(item.bomba) + '</td>' +
+            '<td>' + escaparHtml(item.volume) + '</td>' +
+            '<td>' + escaparHtml(formatarData(item.data)) + '</td>' +
+            '<td>' + escaparHtml(item.observacao) + '</td>' +
+            '<td><div class="row-actions">' +
+            '<button type="button" class="icon-btn edit" data-action="edit" data-rowindex="' + item.rowIndex + '" title="Editar">✏️</button>' +
+            '<button type="button" class="icon-btn delete" data-action="delete" data-rowindex="' + item.rowIndex + '" title="Apagar">🗑️</button>' +
+            '</div></td>';
+          tabelaBody.appendChild(tr);
+        });
 
         mostrarStatus("Dados carregados com sucesso.", "success");
       } catch (erro) {
@@ -390,19 +264,13 @@
     async function enviarAcao(payload, mensagemErroPadrao) {
       const resposta = await fetch(SCRIPT_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
       });
 
       if (!resposta.ok) throw new Error(mensagemErroPadrao);
-
       const resultado = await resposta.json();
-      if (!resultado.success) {
-        throw new Error(resultado.error || mensagemErroPadrao);
-      }
-
+      if (!resultado.success) throw new Error(resultado.error || mensagemErroPadrao);
       return resultado;
     }
 
@@ -426,13 +294,22 @@
       btnSalvar.disabled = true;
 
       try {
-        if (editandoIndex === null) {
+        if (editandoRowIndex === null) {
           mostrarStatus("Salvando registro...", "info");
           await enviarAcao(dados, "Falha ao salvar o registro.");
           mostrarStatus("Registro salvo com sucesso.", "success");
         } else {
           mostrarStatus("Atualizando registro...", "info");
-          await enviarAcao({ action: "update", rowIndex: editandoIndex + 2, nome: dados.nome, caminhao: dados.caminhao, bomba: dados.bomba, volume: dados.volume, data: dados.data, observacao: dados.observacao }, "Falha ao atualizar o registro.");
+          await enviarAcao({
+            action: "update",
+            rowIndex: editandoRowIndex,
+            nome: dados.nome,
+            caminhao: dados.caminhao,
+            bomba: dados.bomba,
+            volume: dados.volume,
+            data: dados.data,
+            observacao: dados.observacao
+          }, "Falha ao atualizar o registro.");
           mostrarStatus("Registro atualizado com sucesso.", "success");
         }
 
@@ -451,10 +328,10 @@
       if (!botao) return;
 
       const action = botao.dataset.action;
-      const indexOriginal = Number(botao.dataset.index);
+      const rowIndex = Number(botao.dataset.rowindex);
 
       if (action === "edit") {
-        preencherFormularioParaEdicao(indexOriginal);
+        preencherFormularioParaEdicao(rowIndex);
         return;
       }
 
@@ -464,9 +341,9 @@
 
         try {
           mostrarStatus("Apagando registro...", "info");
-          await enviarAcao({ action: "delete", rowIndex: indexOriginal + 2 }, "Falha ao apagar o registro.");
+          await enviarAcao({ action: "delete", rowIndex: rowIndex }, "Falha ao apagar o registro.");
 
-          if (editandoIndex === indexOriginal) {
+          if (editandoRowIndex === rowIndex) {
             resetarFormulario();
           }
 

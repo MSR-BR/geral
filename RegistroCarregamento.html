@@ -56,7 +56,7 @@
     <div class="card">
       <h1>Controle de Carregamento</h1>
       <form id="registroForm">
-        <input type="hidden" id="editRowIndex" value="" />
+        <input type="hidden" id="editId" value="" />
         <div class="form-grid">
           <div class="field">
             <label for="nome">Nome</label>
@@ -123,7 +123,7 @@
     const btnAtualizar = document.getElementById("btnAtualizar");
     const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
     const campoData = document.getElementById("data");
-    const campoEditRowIndex = document.getElementById("editRowIndex");
+    const campoEditId = document.getElementById("editId");
     const tituloPagina = document.querySelector("h1");
     let registrosCache = [];
     campoData.value = new Date().toISOString().split("T")[0];
@@ -161,13 +161,13 @@
     function resetarFormulario() {
       form.reset();
       campoData.value = new Date().toISOString().split("T")[0];
-      campoEditRowIndex.value = "";
+      campoEditId.value = "";
       btnSalvar.textContent = "Salvar";
       btnCancelarEdicao.classList.remove("show");
       tituloPagina.textContent = "Controle de Carregamento";
     }
-    function preencherFormularioParaEdicao(rowIndex) {
-      const item = registrosCache.find(function(reg) { return Number(reg.rowIndex) === Number(rowIndex); });
+    function preencherFormularioParaEdicao(id) {
+      const item = registrosCache.find(function(reg) { return String(reg.id) === String(id); });
       if (!item) {
         mostrarStatus("Não foi possível localizar o registro para edição.", "error");
         return;
@@ -178,7 +178,7 @@
       document.getElementById("volume").value = item.volume || "";
       document.getElementById("data").value = normalizarDataParaInput(item.data);
       document.getElementById("observacao").value = item.observacao || "";
-      campoEditRowIndex.value = String(rowIndex);
+      campoEditId.value = String(id);
       btnSalvar.textContent = "Atualizar";
       btnCancelarEdicao.classList.add("show");
       tituloPagina.textContent = "Controle de Carregamento - Editando registro";
@@ -208,8 +208,8 @@
             '<td>' + escaparHtml(formatarData(item.data)) + '</td>' +
             '<td>' + escaparHtml(item.observacao) + '</td>' +
             '<td><div class="row-actions">' +
-            '<button type="button" class="icon-btn edit" data-action="edit" data-rowindex="' + item.rowIndex + '" title="Editar">✏️</button>' +
-            '<button type="button" class="icon-btn delete" data-action="delete" data-rowindex="' + item.rowIndex + '" title="Apagar">🗑️</button>' +
+            '<button type="button" class="icon-btn edit" data-action="edit" data-id="' + escaparHtml(item.id) + '" title="Editar">✏️</button>' +
+            '<button type="button" class="icon-btn delete" data-action="delete" data-id="' + escaparHtml(item.id) + '" title="Apagar">🗑️</button>' +
             '</div></td>';
           tabelaBody.appendChild(tr);
         });
@@ -222,8 +222,8 @@
         btnAtualizar.disabled = false;
       }
     }
-    async function enviarJson(url, payload, mensagemErroPadrao) {
-      const resposta = await fetch(url, {
+    async function enviarJson(payload, mensagemErroPadrao) {
+      const resposta = await fetch(SCRIPT_URL + "?ts=" + Date.now(), {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload),
@@ -250,14 +250,14 @@
       }
       btnSalvar.disabled = true;
       try {
-        const rowIndex = campoEditRowIndex.value.trim();
-        if (!rowIndex) {
+        const id = campoEditId.value.trim();
+        if (!id) {
           mostrarStatus("Salvando registro...", "info");
-          await enviarJson(SCRIPT_URL + "?action=create&ts=" + Date.now(), dados, "Falha ao salvar o registro.");
+          await enviarJson({ action: "create", ...dados }, "Falha ao salvar o registro.");
           mostrarStatus("Registro salvo com sucesso.", "success");
         } else {
           mostrarStatus("Atualizando registro...", "info");
-          await enviarJson(SCRIPT_URL + "?action=update&rowIndex=" + encodeURIComponent(rowIndex) + "&ts=" + Date.now(), dados, "Falha ao atualizar o registro.");
+          await enviarJson({ action: "update", id: id, ...dados }, "Falha ao atualizar o registro.");
           mostrarStatus("Registro atualizado com sucesso.", "success");
         }
         resetarFormulario();
@@ -273,9 +273,9 @@
       const botao = e.target.closest("button[data-action]");
       if (!botao) return;
       const action = botao.dataset.action;
-      const rowIndex = Number(botao.dataset.rowindex);
+      const id = botao.dataset.id;
       if (action === "edit") {
-        preencherFormularioParaEdicao(rowIndex);
+        preencherFormularioParaEdicao(id);
         return;
       }
       if (action === "delete") {
@@ -283,8 +283,8 @@
         if (!confirmar) return;
         try {
           mostrarStatus("Apagando registro...", "info");
-          await enviarJson(SCRIPT_URL + "?action=delete&rowIndex=" + encodeURIComponent(rowIndex) + "&ts=" + Date.now(), {}, "Falha ao apagar o registro.");
-          if (campoEditRowIndex.value && Number(campoEditRowIndex.value) === rowIndex) resetarFormulario();
+          await enviarJson({ action: "delete", id: id }, "Falha ao apagar o registro.");
+          if (campoEditId.value && String(campoEditId.value) === String(id)) resetarFormulario();
           mostrarStatus("Registro apagado com sucesso.", "success");
           await carregarDados();
         } catch (erro) {

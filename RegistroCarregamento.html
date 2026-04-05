@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Carregamento</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f5f7;
+      color: #1f2937;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0 0 18px;
+      text-align: center;
+      font-size: 28px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .field.full { grid-column: 1 / -1; }
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    input, textarea, button {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+    .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    button {
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.05s ease, opacity 0.2s ease;
+    }
+    button:active { transform: scale(0.99); }
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+    .secondary {
+      background: #6b7280;
+      color: white;
+    }
+    .status {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+    }
+    .status.success {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #047857;
+    }
+    .status.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th {
+      background: #f9fafb;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #374151;
+    }
+    tr:hover td {
+      background: #fafafa;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .empty {
+      text-align: center;
+      color: #6b7280;
+      padding: 24px;
+    }
+    @media (max-width: 700px) {
+      .page { padding: 16px 12px 28px; }
+      h1 { font-size: 24px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
+      .actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <h1>Controle de Carregamento</h1>
+
+      <form id="registroForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" name="nome" placeholder="Digite o nome" required />
+          </div>
+
+          <div class="field">
+            <label for="caminhao">Caminhão</label>
+            <input type="text" id="caminhao" name="caminhao" placeholder="Ex.: Caminhão 12" required />
+          </div>
+
+          <div class="field">
+            <label for="bomba">Bomba</label>
+            <input type="text" id="bomba" name="bomba" placeholder="Ex.: Bomba 3" required />
+          </div>
+
+          <div class="field">
+            <label for="volume">Volume</label>
+            <input type="number" step="0.01" id="volume" name="volume" placeholder="Ex.: 250" required />
+          </div>
+
+          <div class="field">
+            <label for="data">Data</label>
+            <input type="date" id="data" name="data" required />
+          </div>
+
+          <div class="field full">
+            <label for="observacao">Observação</label>
+            <textarea id="observacao" name="observacao" placeholder="Escreva alguma observação..."></textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="primary" id="btnSalvar">Salvar</button>
+            <button type="button" class="secondary" id="btnAtualizar">Atualizar tabela</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="status" class="status"></div>
+      <div class="muted">Os dados enviados ficam armazenados na planilha vinculada ao seu Google Apps Script.</div>
+    </div>
+
+    <div class="card">
+      <h2>Registros lançados</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Caminhão</th>
+              <th>Bomba</th>
+              <th>Volume</th>
+              <th>Data</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaBody">
+            <tr>
+              <td colspan="6" class="empty">Carregando dados...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwowI46SGNVLj7GwIhpdkEwgH1WV4P5dqHE6hABm37-cQ4n3Og5kWVbU781zQLGDGGx/exec";
+
+    const form = document.getElementById("registroForm");
+    const statusEl = document.getElementById("status");
+    const tabelaBody = document.getElementById("tabelaBody");
+    const btnSalvar = document.getElementById("btnSalvar");
+    const btnAtualizar = document.getElementById("btnAtualizar");
+    const campoData = document.getElementById("data");
+
+    campoData.value = new Date().toISOString().split("T")[0];
+
+    function mostrarStatus(mensagem, tipo = "info") {
+      statusEl.textContent = mensagem;
+      statusEl.className = `status show ${tipo}`;
+    }
+
+    function escaparHtml(texto) {
+      return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatarData(valor) {
+      if (!valor) return "";
+      const texto = String(valor);
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+        const [ano, mes, dia] = texto.split("-");
+        return `${dia}/${mes}/${ano}`;
+      }
+
+      const data = new Date(texto);
+      if (!Number.isNaN(data.getTime())) {
+        return data.toLocaleDateString("pt-BR");
+      }
+
+      return texto;
+    }
+
+    async function carregarDados() {
+      mostrarStatus("Carregando dados...", "info");
+      btnAtualizar.disabled = true;
+
+      try {
+        const resposta = await fetch(SCRIPT_URL, { method: "GET" });
+        if (!resposta.ok) throw new Error("Falha ao consultar os dados.");
+
+        const dados = await resposta.json();
+        tabelaBody.innerHTML = "";
+
+        if (!Array.isArray(dados) || dados.length === 0) {
+          tabelaBody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum registro encontrado.</td></tr>';
+          mostrarStatus("Nenhum registro encontrado.", "info");
+          return;
+        }
+
+        dados
+          .slice()
+          .reverse()
+          .forEach(item => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${escaparHtml(item.nome)}</td>
+              <td><span class="tag">${escaparHtml(item.caminhao)}</span></td>
+              <td>${escaparHtml(item.bomba)}</td>
+              <td>${escaparHtml(item.volume)}</td>
+              <td>${escaparHtml(formatarData(item.data))}</td>
+              <td>${escaparHtml(item.observacao)}</td>
+            `;
+            tabelaBody.appendChild(tr);
+          });
+
+        mostrarStatus("Dados carregados com sucesso.", "success");
+      } catch (erro) {
+        console.error(erro);
+        tabelaBody.innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar os dados.</td></tr>';
+        mostrarStatus("Erro ao carregar os dados. Verifique a publicação do Apps Script e as permissões.", "error");
+      } finally {
+        btnAtualizar.disabled = false;
+      }
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const dados = {
+        nome: document.getElementById("nome").value.trim(),
+        caminhao: document.getElementById("caminhao").value.trim(),
+        bomba: document.getElementById("bomba").value.trim(),
+        volume: document.getElementById("volume").value.trim(),
+        data: document.getElementById("data").value,
+        observacao: document.getElementById("observacao").value.trim()
+      };
+
+      if (!dados.nome || !dados.caminhao || !dados.bomba || !dados.volume || !dados.data) {
+        mostrarStatus("Preencha todos os campos obrigatórios.", "error");
+        return;
+      }
+
+      mostrarStatus("Salvando registro...", "info");
+      btnSalvar.disabled = true;
+
+      try {
+        const resposta = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(dados)
+        });
+
+        if (!resposta.ok) throw new Error("Falha ao salvar o registro.");
+
+        const resultado = await resposta.json();
+
+        if (resultado.success) {
+          mostrarStatus("Registro salvo com sucesso.", "success");
+          form.reset();
+          campoData.value = new Date().toISOString().split("T")[0];
+          await carregarDados();
+        } else {
+          throw new Error(resultado.error || "Erro desconhecido ao salvar.");
+        }
+      } catch (erro) {
+        console.error(erro);
+        mostrarStatus("Erro ao salvar os dados. Verifique se o Apps Script está publicado como aplicativo da web.", "error");
+      } finally {
+        btnSalvar.disabled = false;
+      }
+    });
+
+    btnAtualizar.addEventListener("click", carregarDados);
+
+    carregarDados();
+  </script>
+</body>
+</html>

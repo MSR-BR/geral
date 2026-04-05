@@ -79,6 +79,15 @@
       background: #6b7280;
       color: white;
     }
+    .warning {
+      background: #d97706;
+      color: white;
+      display: none;
+      width: auto;
+    }
+    .warning.show {
+      display: inline-block;
+    }
     .status {
       margin-top: 14px;
       padding: 12px 14px;
@@ -112,7 +121,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 760px;
+      min-width: 860px;
     }
     th, td {
       padding: 12px 10px;
@@ -150,12 +159,33 @@
       color: #6b7280;
       padding: 24px;
     }
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: white;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn.edit:hover { background: #eff6ff; }
+    .icon-btn.delete:hover { background: #fef2f2; }
     @media (max-width: 700px) {
       .page { padding: 16px 12px 28px; }
       h1 { font-size: 24px; }
       .form-grid { grid-template-columns: 1fr; }
       .card { padding: 16px; }
       .actions { flex-direction: column; }
+      .warning, .warning.show { width: 100%; }
     }
   </style>
 </head>
@@ -199,6 +229,7 @@
           <div class="actions">
             <button type="submit" class="primary" id="btnSalvar">Salvar</button>
             <button type="button" class="secondary" id="btnAtualizar">Atualizar tabela</button>
+            <button type="button" class="warning" id="btnCancelarEdicao">Cancelar edição</button>
           </div>
         </div>
       </form>
@@ -219,11 +250,12 @@
               <th>Volume</th>
               <th>Data</th>
               <th>Observação</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="tabelaBody">
             <tr>
-              <td colspan="6" class="empty">Carregando dados...</td>
+              <td colspan="7" class="empty">Carregando dados...</td>
             </tr>
           </tbody>
         </table>
@@ -239,13 +271,18 @@
     const tabelaBody = document.getElementById("tabelaBody");
     const btnSalvar = document.getElementById("btnSalvar");
     const btnAtualizar = document.getElementById("btnAtualizar");
+    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
     const campoData = document.getElementById("data");
+    const tituloPagina = document.querySelector("h1");
+
+    let registrosCache = [];
+    let editandoIndex = null;
 
     campoData.value = new Date().toISOString().split("T")[0];
 
-    function mostrarStatus(mensagem, tipo = "info") {
+    function mostrarStatus(mensagem, tipo) {
       statusEl.textContent = mensagem;
-      statusEl.className = `status show ${tipo}`;
+      statusEl.className = "status show " + (tipo || "info");
     }
 
     function escaparHtml(texto) {
@@ -262,8 +299,8 @@
       const texto = String(valor);
 
       if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-        const [ano, mes, dia] = texto.split("-");
-        return `${dia}/${mes}/${ano}`;
+        const partes = texto.split("-");
+        return partes[2] + "/" + partes[1] + "/" + partes[0];
       }
 
       const data = new Date(texto);
@@ -272,6 +309,34 @@
       }
 
       return texto;
+    }
+
+    function resetarFormulario() {
+      form.reset();
+      campoData.value = new Date().toISOString().split("T")[0];
+      editandoIndex = null;
+      btnSalvar.textContent = "Salvar";
+      btnCancelarEdicao.classList.remove("show");
+      tituloPagina.textContent = "Controle de Carregamento";
+    }
+
+    function preencherFormularioParaEdicao(indexOriginal) {
+      const item = registrosCache[indexOriginal];
+      if (!item) return;
+
+      document.getElementById("nome").value = item.nome || "";
+      document.getElementById("caminhao").value = item.caminhao || "";
+      document.getElementById("bomba").value = item.bomba || "";
+      document.getElementById("volume").value = item.volume || "";
+      document.getElementById("data").value = /^\d{4}-\d{2}-\d{2}$/.test(String(item.data || "")) ? item.data : campoData.value;
+      document.getElementById("observacao").value = item.observacao || "";
+
+      editandoIndex = indexOriginal;
+      btnSalvar.textContent = "Atualizar";
+      btnCancelarEdicao.classList.add("show");
+      tituloPagina.textContent = "Controle de Carregamento - Editando registro";
+      mostrarStatus("Modo de edição ativado. Faça as alterações e clique em Atualizar.", "info");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     async function carregarDados() {
@@ -283,38 +348,62 @@
         if (!resposta.ok) throw new Error("Falha ao consultar os dados.");
 
         const dados = await resposta.json();
+        registrosCache = Array.isArray(dados) ? dados : [];
         tabelaBody.innerHTML = "";
 
-        if (!Array.isArray(dados) || dados.length === 0) {
-          tabelaBody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum registro encontrado.</td></tr>';
+        if (registrosCache.length === 0) {
+          tabelaBody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum registro encontrado.</td></tr>';
           mostrarStatus("Nenhum registro encontrado.", "info");
           return;
         }
 
-        dados
-          .slice()
+        registrosCache
+          .map(function(item, indexOriginal) { return { item: item, indexOriginal: indexOriginal }; })
           .reverse()
-          .forEach(item => {
+          .forEach(function(obj) {
+            const item = obj.item;
+            const indexOriginal = obj.indexOriginal;
             const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${escaparHtml(item.nome)}</td>
-              <td><span class="tag">${escaparHtml(item.caminhao)}</span></td>
-              <td>${escaparHtml(item.bomba)}</td>
-              <td>${escaparHtml(item.volume)}</td>
-              <td>${escaparHtml(formatarData(item.data))}</td>
-              <td>${escaparHtml(item.observacao)}</td>
-            `;
+            tr.innerHTML = '<td>' + escaparHtml(item.nome) + '</td>' +
+              '<td><span class="tag">' + escaparHtml(item.caminhao) + '</span></td>' +
+              '<td>' + escaparHtml(item.bomba) + '</td>' +
+              '<td>' + escaparHtml(item.volume) + '</td>' +
+              '<td>' + escaparHtml(formatarData(item.data)) + '</td>' +
+              '<td>' + escaparHtml(item.observacao) + '</td>' +
+              '<td><div class="row-actions">' +
+              '<button type="button" class="icon-btn edit" data-action="edit" data-index="' + indexOriginal + '" title="Editar">✏️</button>' +
+              '<button type="button" class="icon-btn delete" data-action="delete" data-index="' + indexOriginal + '" title="Apagar">🗑️</button>' +
+              '</div></td>';
             tabelaBody.appendChild(tr);
           });
 
         mostrarStatus("Dados carregados com sucesso.", "success");
       } catch (erro) {
         console.error(erro);
-        tabelaBody.innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar os dados.</td></tr>';
+        tabelaBody.innerHTML = '<tr><td colspan="7" class="empty">Erro ao carregar os dados.</td></tr>';
         mostrarStatus("Erro ao carregar os dados. Verifique a publicação do Apps Script e as permissões.", "error");
       } finally {
         btnAtualizar.disabled = false;
       }
+    }
+
+    async function enviarAcao(payload, mensagemErroPadrao) {
+      const resposta = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resposta.ok) throw new Error(mensagemErroPadrao);
+
+      const resultado = await resposta.json();
+      if (!resultado.success) {
+        throw new Error(resultado.error || mensagemErroPadrao);
+      }
+
+      return resultado;
     }
 
     form.addEventListener("submit", async function (e) {
@@ -334,36 +423,65 @@
         return;
       }
 
-      mostrarStatus("Salvando registro...", "info");
       btnSalvar.disabled = true;
 
       try {
-        const resposta = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(dados)
-        });
-
-        if (!resposta.ok) throw new Error("Falha ao salvar o registro.");
-
-        const resultado = await resposta.json();
-
-        if (resultado.success) {
+        if (editandoIndex === null) {
+          mostrarStatus("Salvando registro...", "info");
+          await enviarAcao(dados, "Falha ao salvar o registro.");
           mostrarStatus("Registro salvo com sucesso.", "success");
-          form.reset();
-          campoData.value = new Date().toISOString().split("T")[0];
-          await carregarDados();
         } else {
-          throw new Error(resultado.error || "Erro desconhecido ao salvar.");
+          mostrarStatus("Atualizando registro...", "info");
+          await enviarAcao({ action: "update", rowIndex: editandoIndex + 2, nome: dados.nome, caminhao: dados.caminhao, bomba: dados.bomba, volume: dados.volume, data: dados.data, observacao: dados.observacao }, "Falha ao atualizar o registro.");
+          mostrarStatus("Registro atualizado com sucesso.", "success");
         }
+
+        resetarFormulario();
+        await carregarDados();
       } catch (erro) {
         console.error(erro);
-        mostrarStatus("Erro ao salvar os dados. Verifique se o Apps Script está publicado como aplicativo da web.", "error");
+        mostrarStatus("Erro ao processar os dados. " + erro.message, "error");
       } finally {
         btnSalvar.disabled = false;
       }
+    });
+
+    tabelaBody.addEventListener("click", async function (e) {
+      const botao = e.target.closest("button[data-action]");
+      if (!botao) return;
+
+      const action = botao.dataset.action;
+      const indexOriginal = Number(botao.dataset.index);
+
+      if (action === "edit") {
+        preencherFormularioParaEdicao(indexOriginal);
+        return;
+      }
+
+      if (action === "delete") {
+        const confirmar = window.confirm("Deseja realmente apagar este registro?");
+        if (!confirmar) return;
+
+        try {
+          mostrarStatus("Apagando registro...", "info");
+          await enviarAcao({ action: "delete", rowIndex: indexOriginal + 2 }, "Falha ao apagar o registro.");
+
+          if (editandoIndex === indexOriginal) {
+            resetarFormulario();
+          }
+
+          mostrarStatus("Registro apagado com sucesso.", "success");
+          await carregarDados();
+        } catch (erro) {
+          console.error(erro);
+          mostrarStatus("Erro ao apagar o registro. " + erro.message, "error");
+        }
+      }
+    });
+
+    btnCancelarEdicao.addEventListener("click", function () {
+      resetarFormulario();
+      mostrarStatus("Edição cancelada.", "info");
     });
 
     btnAtualizar.addEventListener("click", carregarDados);
